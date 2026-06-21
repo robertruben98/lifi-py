@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 
 class LifiError(Exception):
@@ -17,7 +17,7 @@ class LifiAPIError(LifiError):
         message: str,
         *,
         status_code: int,
-        response_body: Any | None = None,
+        response_body: Optional[Any] = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
@@ -36,8 +36,8 @@ class LifiRateLimitError(LifiAPIError):
         message: str,
         *,
         status_code: int = 429,
-        retry_after: float | None = None,
-        response_body: Any | None = None,
+        retry_after: Optional[float] = None,
+        response_body: Optional[Any] = None,
     ) -> None:
         super().__init__(message, status_code=status_code, response_body=response_body)
         self.retry_after = retry_after

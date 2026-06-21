@@ -48,13 +48,17 @@ packages = ["src/lifi_py"]
 
 [tool.ruff]
 line-length = 100
-# Tooling targets 3.10 (matches mypy/CI); `from __future__ import annotations`
-# keeps `X | None` annotations safe at the >=3.9 runtime floor.
+# Tooling targets 3.10 (local mypy refuses 3.9), but the package supports the
+# 3.9 runtime floor. Annotations are resolved at runtime by pydantic, so they
+# use typing.Optional/Union rather than PEP 604 `X | None` (which raises on 3.9).
 target-version = "py310"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "W", "C4", "SIM"]
+# UP007/UP045 push PEP 604 unions; we deliberately keep Optional/Union so the
+# runtime-evaluated annotations work on Python 3.9.
+ignore = ["UP007", "UP045"]
 
 [tool.mypy]
 python_version = "3.10"

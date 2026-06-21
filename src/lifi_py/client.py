@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from types import TracebackType
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import httpx
 
@@ -25,7 +25,7 @@ DEFAULT_MAX_RETRIES = 3
 
 # Chain/token identifiers accept ids or keys/symbols. Written with ``Union`` (not
 # ``X | Y``) so this runtime alias stays importable on the 3.9 floor.
-ChainRef = Union[int, str]  # noqa: UP007
+ChainRef = Union[int, str]
 
 
 class Tools:
@@ -36,7 +36,7 @@ class Tools:
         self.exchanges = exchanges
 
 
-def _build_headers(api_key: str | None, api_key_header: str) -> dict[str, str]:
+def _build_headers(api_key: Optional[str], api_key_header: str) -> dict[str, str]:
     headers = {"Accept": "application/json"}
     if api_key:
         headers[api_key_header] = api_key
@@ -55,10 +55,10 @@ def _quote_query(
     to_token: str,
     from_amount: str,
     from_address: str,
-    to_address: str | None,
-    slippage: float | None,
-    order: str | None,
-    integrator: str | None,
+    to_address: Optional[str],
+    slippage: Optional[float],
+    order: Optional[str],
+    integrator: Optional[str],
 ) -> dict[str, str]:
     return build_query(
         fromChain=from_chain,
@@ -81,7 +81,7 @@ def _routes_body(
     from_token: str,
     to_token: str,
     from_amount: str,
-    options: dict[str, Any] | None,
+    options: Optional[dict[str, Any]],
 ) -> dict[str, Any]:
     body: dict[str, Any] = {
         "fromChainId": from_chain,
@@ -120,12 +120,12 @@ class LifiClient:
     def __init__(
         self,
         *,
-        api_key: str | None = None,
+        api_key: Optional[str] = None,
         base_url: str = DEFAULT_BASE_URL,
         api_key_header: str = DEFAULT_API_KEY_HEADER,
         timeout: float = DEFAULT_TIMEOUT,
         max_retries: int = DEFAULT_MAX_RETRIES,
-        http_client: httpx.Client | None = None,
+        http_client: Optional[httpx.Client] = None,
     ) -> None:
         self.base_url = _normalize_base_url(base_url)
         self.max_retries = max_retries
@@ -137,7 +137,7 @@ class LifiClient:
         )
 
     @property
-    def rate_limit(self) -> RateLimit | None:
+    def rate_limit(self) -> Optional[RateLimit]:
         """The most recent rate-limit snapshot, or ``None`` before any call."""
         if self._rate.current.limit is None and self._rate.current.remaining is None:
             return None
@@ -148,9 +148,9 @@ class LifiClient:
 
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
+        exc_type: Optional[type[BaseException]],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
     ) -> None:
         self.close()
 
@@ -183,10 +183,10 @@ class LifiClient:
         to_token: str,
         from_amount: str,
         from_address: str,
-        to_address: str | None = None,
-        slippage: float | None = None,
-        order: str | None = None,
-        integrator: str | None = None,
+        to_address: Optional[str] = None,
+        slippage: Optional[float] = None,
+        order: Optional[str] = None,
+        integrator: Optional[str] = None,
     ) -> Quote:
         """Get the best single-step quote with a ready-to-sign transaction."""
         params = _quote_query(
@@ -207,9 +207,9 @@ class LifiClient:
         self,
         *,
         tx_hash: str,
-        bridge: str | None = None,
-        from_chain: ChainRef | None = None,
-        to_chain: ChainRef | None = None,
+        bridge: Optional[str] = None,
+        from_chain: Optional[ChainRef] = None,
+        to_chain: Optional[ChainRef] = None,
     ) -> Status:
         """Track the status of a cross-chain transfer by its source tx hash."""
         params = build_query(txHash=tx_hash, bridge=bridge, fromChain=from_chain, toChain=to_chain)
@@ -228,8 +228,8 @@ class LifiClient:
     def get_connections(
         self,
         *,
-        from_chain: ChainRef | None = None,
-        to_chain: ChainRef | None = None,
+        from_chain: Optional[ChainRef] = None,
+        to_chain: Optional[ChainRef] = None,
     ) -> list[Connection]:
         params = build_query(fromChain=from_chain, toChain=to_chain)
         payload = self._request("GET", "/connections", params=params)
@@ -243,7 +243,7 @@ class LifiClient:
         from_token: str,
         to_token: str,
         from_amount: str,
-        options: dict[str, Any] | None = None,
+        options: Optional[dict[str, Any]] = None,
     ) -> list[Route]:
         """Get multiple candidate routes (POST /advanced/routes)."""
         body = _routes_body(
@@ -267,9 +267,9 @@ class LifiClient:
         self,
         *,
         tx_hash: str,
-        bridge: str | None = None,
-        from_chain: ChainRef | None = None,
-        to_chain: ChainRef | None = None,
+        bridge: Optional[str] = None,
+        from_chain: Optional[ChainRef] = None,
+        to_chain: Optional[ChainRef] = None,
         interval: float = 5.0,
         timeout: float = 300.0,
         max_interval: float = 30.0,
@@ -303,12 +303,12 @@ class AsyncLifiClient:
     def __init__(
         self,
         *,
-        api_key: str | None = None,
+        api_key: Optional[str] = None,
         base_url: str = DEFAULT_BASE_URL,
         api_key_header: str = DEFAULT_API_KEY_HEADER,
         timeout: float = DEFAULT_TIMEOUT,
         max_retries: int = DEFAULT_MAX_RETRIES,
-        http_client: httpx.AsyncClient | None = None,
+        http_client: Optional[httpx.AsyncClient] = None,
     ) -> None:
         self.base_url = _normalize_base_url(base_url)
         self.max_retries = max_retries
@@ -320,7 +320,7 @@ class AsyncLifiClient:
         )
 
     @property
-    def rate_limit(self) -> RateLimit | None:
+    def rate_limit(self) -> Optional[RateLimit]:
         if self._rate.current.limit is None and self._rate.current.remaining is None:
             return None
         return self._rate.current
@@ -330,9 +330,9 @@ class AsyncLifiClient:
 
     async def __aexit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
+        exc_type: Optional[type[BaseException]],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
     ) -> None:
         await self.close()
 
@@ -363,10 +363,10 @@ class AsyncLifiClient:
         to_token: str,
         from_amount: str,
         from_address: str,
-        to_address: str | None = None,
-        slippage: float | None = None,
-        order: str | None = None,
-        integrator: str | None = None,
+        to_address: Optional[str] = None,
+        slippage: Optional[float] = None,
+        order: Optional[str] = None,
+        integrator: Optional[str] = None,
     ) -> Quote:
         params = _quote_query(
             from_chain=from_chain,
@@ -386,9 +386,9 @@ class AsyncLifiClient:
         self,
         *,
         tx_hash: str,
-        bridge: str | None = None,
-        from_chain: ChainRef | None = None,
-        to_chain: ChainRef | None = None,
+        bridge: Optional[str] = None,
+        from_chain: Optional[ChainRef] = None,
+        to_chain: Optional[ChainRef] = None,
     ) -> Status:
         params = build_query(txHash=tx_hash, bridge=bridge, fromChain=from_chain, toChain=to_chain)
         return Status.model_validate(await self._request("GET", "/status", params=params))
@@ -406,8 +406,8 @@ class AsyncLifiClient:
     async def get_connections(
         self,
         *,
-        from_chain: ChainRef | None = None,
-        to_chain: ChainRef | None = None,
+        from_chain: Optional[ChainRef] = None,
+        to_chain: Optional[ChainRef] = None,
     ) -> list[Connection]:
         params = build_query(fromChain=from_chain, toChain=to_chain)
         payload = await self._request("GET", "/connections", params=params)
@@ -421,7 +421,7 @@ class AsyncLifiClient:
         from_token: str,
         to_token: str,
         from_amount: str,
-        options: dict[str, Any] | None = None,
+        options: Optional[dict[str, Any]] = None,
     ) -> list[Route]:
         body = _routes_body(
             from_chain=from_chain,
@@ -443,9 +443,9 @@ class AsyncLifiClient:
         self,
         *,
         tx_hash: str,
-        bridge: str | None = None,
-        from_chain: ChainRef | None = None,
-        to_chain: ChainRef | None = None,
+        bridge: Optional[str] = None,
+        from_chain: Optional[ChainRef] = None,
+        to_chain: Optional[ChainRef] = None,
         interval: float = 5.0,
         timeout: float = 300.0,
         max_interval: float = 30.0,

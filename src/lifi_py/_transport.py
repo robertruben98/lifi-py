@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -26,12 +26,12 @@ DEFAULT_BASE_URL = "https://li.quest/v1"
 class RateLimit:
     """Snapshot of the API's rate-limit headers from the last response."""
 
-    limit: int | None = None
-    remaining: int | None = None
-    reset: float | None = None
+    limit: Optional[int] = None
+    remaining: Optional[int] = None
+    reset: Optional[float] = None
 
 
-def _to_int(value: str | None) -> int | None:
+def _to_int(value: Optional[str]) -> Optional[int]:
     if value is None:
         return None
     try:
@@ -40,7 +40,7 @@ def _to_int(value: str | None) -> int | None:
         return None
 
 
-def _to_float(value: str | None) -> float | None:
+def _to_float(value: Optional[str]) -> Optional[float]:
     if value is None:
         return None
     try:
@@ -73,7 +73,7 @@ class RateLimitState:
         return 0.0
 
 
-def retry_after_seconds(response: httpx.Response) -> float | None:
+def retry_after_seconds(response: httpx.Response) -> Optional[float]:
     """Best-effort wait window from a 429 response's headers."""
     reset = _to_float(response.headers.get("ratelimit-reset"))
     if reset is not None:

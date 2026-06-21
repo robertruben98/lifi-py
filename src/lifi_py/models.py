@@ -7,7 +7,7 @@ unknown fields so they keep working as the API evolves.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,35 +26,35 @@ class Token(_Model):
     chain_id: int = Field(alias="chainId")
     symbol: str
     decimals: int
-    name: str | None = None
-    price_usd: str | None = Field(default=None, alias="priceUSD")
-    coin_key: str | None = Field(default=None, alias="coinKey")
-    logo_uri: str | None = Field(default=None, alias="logoURI")
+    name: Optional[str] = None
+    price_usd: Optional[str] = Field(default=None, alias="priceUSD")
+    coin_key: Optional[str] = Field(default=None, alias="coinKey")
+    logo_uri: Optional[str] = Field(default=None, alias="logoURI")
 
 
 class Chain(_Model):
     id: int
     key: str
     name: str
-    chain_type: str | None = Field(default=None, alias="chainType")
+    chain_type: Optional[str] = Field(default=None, alias="chainType")
     native_token: Token = Field(alias="nativeToken")
-    logo_uri: str | None = Field(default=None, alias="logoURI")
-    mainnet: bool | None = None
+    logo_uri: Optional[str] = Field(default=None, alias="logoURI")
+    mainnet: Optional[bool] = None
 
 
 class Tool(_Model):
     key: str
     name: str
-    logo_uri: str | None = Field(default=None, alias="logoURI")
+    logo_uri: Optional[str] = Field(default=None, alias="logoURI")
 
 
 class ToolDetails(_Model):
     key: str
     name: str
-    logo_uri: str | None = Field(default=None, alias="logoURI")
+    logo_uri: Optional[str] = Field(default=None, alias="logoURI")
 
 
-def _hex_or_int(value: str | None) -> int | None:
+def _hex_or_int(value: Optional[str]) -> Optional[int]:
     if value is None:
         return None
     if isinstance(value, int):
@@ -68,12 +68,12 @@ def _hex_or_int(value: str | None) -> int | None:
 class TransactionRequest(_Model):
     """A ready-to-sign EVM transaction returned by ``/quote`` or step assembly."""
 
-    to: str | None = None
-    data: str | None = None
-    value: str | None = None
-    gas_limit: str | None = Field(default=None, alias="gasLimit")
-    gas_price: str | None = Field(default=None, alias="gasPrice")
-    chain_id: int | None = Field(default=None, alias="chainId")
+    to: Optional[str] = None
+    data: Optional[str] = None
+    value: Optional[str] = None
+    gas_limit: Optional[str] = Field(default=None, alias="gasLimit")
+    gas_price: Optional[str] = Field(default=None, alias="gasPrice")
+    chain_id: Optional[int] = Field(default=None, alias="chainId")
 
     def as_web3_tx(self) -> dict[str, Any]:
         """Return a dict shaped for ``web3.eth.send_transaction`` / signing.
@@ -98,52 +98,52 @@ class TransactionRequest(_Model):
 
 
 class GasCost(_Model):
-    type: str | None = None
-    amount: str | None = None
-    amount_usd: str | None = Field(default=None, alias="amountUSD")
-    token: Token | None = None
+    type: Optional[str] = None
+    amount: Optional[str] = None
+    amount_usd: Optional[str] = Field(default=None, alias="amountUSD")
+    token: Optional[Token] = None
 
 
 class FeeCost(_Model):
-    name: str | None = None
-    description: str | None = None
-    amount: str | None = None
-    amount_usd: str | None = Field(default=None, alias="amountUSD")
-    percentage: str | None = None
-    token: Token | None = None
-    included: bool | None = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    amount: Optional[str] = None
+    amount_usd: Optional[str] = Field(default=None, alias="amountUSD")
+    percentage: Optional[str] = None
+    token: Optional[Token] = None
+    included: Optional[bool] = None
 
 
 class Estimate(_Model):
-    tool: str | None = None
-    from_amount: str | None = Field(default=None, alias="fromAmount")
-    to_amount: str | None = Field(default=None, alias="toAmount")
-    to_amount_min: str | None = Field(default=None, alias="toAmountMin")
-    approval_address: str | None = Field(default=None, alias="approvalAddress")
-    execution_duration: float | None = Field(default=None, alias="executionDuration")
+    tool: Optional[str] = None
+    from_amount: Optional[str] = Field(default=None, alias="fromAmount")
+    to_amount: Optional[str] = Field(default=None, alias="toAmount")
+    to_amount_min: Optional[str] = Field(default=None, alias="toAmountMin")
+    approval_address: Optional[str] = Field(default=None, alias="approvalAddress")
+    execution_duration: Optional[float] = Field(default=None, alias="executionDuration")
     gas_costs: list[GasCost] = Field(default_factory=list, alias="gasCosts")
     fee_costs: list[FeeCost] = Field(default_factory=list, alias="feeCosts")
 
 
 class Action(_Model):
-    from_chain_id: int | None = Field(default=None, alias="fromChainId")
-    to_chain_id: int | None = Field(default=None, alias="toChainId")
-    from_token: Token | None = Field(default=None, alias="fromToken")
-    to_token: Token | None = Field(default=None, alias="toToken")
-    from_amount: str | None = Field(default=None, alias="fromAmount")
-    from_address: str | None = Field(default=None, alias="fromAddress")
-    to_address: str | None = Field(default=None, alias="toAddress")
-    slippage: float | None = None
+    from_chain_id: Optional[int] = Field(default=None, alias="fromChainId")
+    to_chain_id: Optional[int] = Field(default=None, alias="toChainId")
+    from_token: Optional[Token] = Field(default=None, alias="fromToken")
+    to_token: Optional[Token] = Field(default=None, alias="toToken")
+    from_amount: Optional[str] = Field(default=None, alias="fromAmount")
+    from_address: Optional[str] = Field(default=None, alias="fromAddress")
+    to_address: Optional[str] = Field(default=None, alias="toAddress")
+    slippage: Optional[float] = None
 
 
 class Step(_Model):
     id: str
     type: str
     tool: str
-    tool_details: ToolDetails | None = Field(default=None, alias="toolDetails")
-    action: Action | None = None
-    estimate: Estimate | None = None
-    transaction_request: TransactionRequest | None = Field(
+    tool_details: Optional[ToolDetails] = Field(default=None, alias="toolDetails")
+    action: Optional[Action] = None
+    estimate: Optional[Estimate] = None
+    transaction_request: Optional[TransactionRequest] = Field(
         default=None, alias="transactionRequest"
     )
 
@@ -154,47 +154,47 @@ class Quote(_Model):
     type: str
     id: str
     tool: str
-    tool_details: ToolDetails | None = Field(default=None, alias="toolDetails")
+    tool_details: Optional[ToolDetails] = Field(default=None, alias="toolDetails")
     action: Action
     estimate: Estimate
     included_steps: list[Step] = Field(default_factory=list, alias="includedSteps")
-    integrator: str | None = None
-    transaction_request: TransactionRequest | None = Field(
+    integrator: Optional[str] = None
+    transaction_request: Optional[TransactionRequest] = Field(
         default=None, alias="transactionRequest"
     )
-    transaction_id: str | None = Field(default=None, alias="transactionId")
+    transaction_id: Optional[str] = Field(default=None, alias="transactionId")
 
 
 class Route(_Model):
     id: str
-    from_chain_id: int | None = Field(default=None, alias="fromChainId")
-    to_chain_id: int | None = Field(default=None, alias="toChainId")
-    from_amount: str | None = Field(default=None, alias="fromAmount")
-    to_amount: str | None = Field(default=None, alias="toAmount")
-    to_amount_min: str | None = Field(default=None, alias="toAmountMin")
-    from_token: Token | None = Field(default=None, alias="fromToken")
-    to_token: Token | None = Field(default=None, alias="toToken")
+    from_chain_id: Optional[int] = Field(default=None, alias="fromChainId")
+    to_chain_id: Optional[int] = Field(default=None, alias="toChainId")
+    from_amount: Optional[str] = Field(default=None, alias="fromAmount")
+    to_amount: Optional[str] = Field(default=None, alias="toAmount")
+    to_amount_min: Optional[str] = Field(default=None, alias="toAmountMin")
+    from_token: Optional[Token] = Field(default=None, alias="fromToken")
+    to_token: Optional[Token] = Field(default=None, alias="toToken")
     steps: list[Step] = Field(default_factory=list)
 
 
 class TransferInfo(_Model):
-    tx_hash: str | None = Field(default=None, alias="txHash")
-    tx_link: str | None = Field(default=None, alias="txLink")
-    chain_id: int | None = Field(default=None, alias="chainId")
-    amount: str | None = None
-    token: Token | None = None
+    tx_hash: Optional[str] = Field(default=None, alias="txHash")
+    tx_link: Optional[str] = Field(default=None, alias="txLink")
+    chain_id: Optional[int] = Field(default=None, alias="chainId")
+    amount: Optional[str] = None
+    token: Optional[Token] = None
 
 
 class Status(_Model):
     """Result of ``/status`` while tracking a cross-chain transfer."""
 
     status: str
-    substatus: str | None = None
-    substatus_message: str | None = Field(default=None, alias="substatusMessage")
-    transaction_id: str | None = Field(default=None, alias="transactionId")
-    tool: str | None = None
-    sending: TransferInfo | None = None
-    receiving: TransferInfo | None = None
+    substatus: Optional[str] = None
+    substatus_message: Optional[str] = Field(default=None, alias="substatusMessage")
+    transaction_id: Optional[str] = Field(default=None, alias="transactionId")
+    tool: Optional[str] = None
+    sending: Optional[TransferInfo] = None
+    receiving: Optional[TransferInfo] = None
 
     @property
     def is_done(self) -> bool:
