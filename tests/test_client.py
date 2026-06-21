@@ -344,6 +344,49 @@ def test_poll_status_times_out(monkeypatch: pytest.MonkeyPatch) -> None:
         client.poll_status(tx_hash="0xsendhash", interval=1.0, timeout=2.0)
 
 
+def test_injected_http_client_base_url_is_reflected() -> None:
+    # When the user injects their own client, client.base_url must reflect the
+    # injected client's actual base_url, not the (ignored) default.
+    http = httpx.Client(base_url="https://proxy.internal/v1")
+    client = LifiClient(http_client=http)
+    assert client.base_url == "https://proxy.internal/v1"
+
+
+@respx.mock
+def test_injected_http_client_is_used_for_requests() -> None:
+    # Relative paths must resolve against the injected client's base_url.
+    respx.get("https://proxy.internal/v1/chains").mock(
+        return_value=httpx.Response(200, json=CHAINS_RESPONSE)
+    )
+    http = httpx.Client(base_url="https://proxy.internal/v1")
+    client = LifiClient(http_client=http)
+    chains = client.get_chains()
+    assert len(chains) == 2
+
+
+def test_injected_http_client_warns_when_base_url_also_passed() -> None:
+    http = httpx.Client(base_url="https://proxy.internal/v1")
+    with pytest.warns(UserWarning, match="http_client"):
+        client = LifiClient(base_url="https://other.example/v1", http_client=http)
+    # the injected client wins, and base_url reflects it
+    assert client.base_url == "https://proxy.internal/v1"
+
+
+def test_injected_http_client_warns_when_api_key_also_passed() -> None:
+    http = httpx.Client(base_url="https://proxy.internal/v1")
+    with pytest.warns(UserWarning, match="http_client"):
+        LifiClient(api_key="secret", http_client=http)
+
+
+def test_injected_http_client_no_warning_without_conflicting_args() -> None:
+    import warnings
+
+    http = httpx.Client(base_url="https://proxy.internal/v1")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # any warning becomes an error
+        LifiClient(http_client=http)
+
+
 def test_context_manager_closes() -> None:
     with LifiClient() as client:
         assert client._http.is_closed is False

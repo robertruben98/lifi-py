@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from types import TracebackType
 from typing import Any, Optional, Union
 
@@ -45,6 +46,35 @@ def _build_headers(api_key: Optional[str], api_key_header: str) -> dict[str, str
 
 def _normalize_base_url(base_url: str) -> str:
     return base_url.rstrip("/")
+
+
+def _warn_ignored_args_for_injected_client(
+    *,
+    base_url: str,
+    api_key: Optional[str],
+    api_key_header: str,
+) -> None:
+    """Warn that base_url/auth are ignored when an http_client is injected.
+
+    An injected client is an escape hatch: it owns its own ``base_url`` and
+    headers, so any conflicting constructor args are silently dropped. Surface
+    that instead of letting requests mysteriously hit the wrong host.
+    """
+    ignored = []
+    if base_url != DEFAULT_BASE_URL:
+        ignored.append("base_url")
+    if api_key is not None:
+        ignored.append("api_key")
+    if api_key_header != DEFAULT_API_KEY_HEADER:
+        ignored.append("api_key_header")
+    if ignored:
+        warnings.warn(
+            "An explicit http_client was provided; "
+            f"{', '.join(ignored)} {'is' if len(ignored) == 1 else 'are'} ignored. "
+            "Configure base_url and auth headers on the injected client instead.",
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def _quote_query(
@@ -127,14 +157,22 @@ class LifiClient:
         max_retries: int = DEFAULT_MAX_RETRIES,
         http_client: Optional[httpx.Client] = None,
     ) -> None:
-        self.base_url = _normalize_base_url(base_url)
         self.max_retries = max_retries
         self._rate = RateLimitState()
-        self._http = http_client or httpx.Client(
-            base_url=self.base_url,
-            headers=_build_headers(api_key, api_key_header),
-            timeout=timeout,
-        )
+        if http_client is not None:
+            _warn_ignored_args_for_injected_client(
+                base_url=base_url, api_key=api_key, api_key_header=api_key_header
+            )
+            self._http = http_client
+            # base_url must reflect the client actually in use, not the ignored arg.
+            self.base_url = _normalize_base_url(str(http_client.base_url))
+        else:
+            self.base_url = _normalize_base_url(base_url)
+            self._http = httpx.Client(
+                base_url=self.base_url,
+                headers=_build_headers(api_key, api_key_header),
+                timeout=timeout,
+            )
 
     @property
     def rate_limit(self) -> Optional[RateLimit]:
@@ -310,14 +348,22 @@ class AsyncLifiClient:
         max_retries: int = DEFAULT_MAX_RETRIES,
         http_client: Optional[httpx.AsyncClient] = None,
     ) -> None:
-        self.base_url = _normalize_base_url(base_url)
         self.max_retries = max_retries
         self._rate = RateLimitState()
-        self._http = http_client or httpx.AsyncClient(
-            base_url=self.base_url,
-            headers=_build_headers(api_key, api_key_header),
-            timeout=timeout,
-        )
+        if http_client is not None:
+            _warn_ignored_args_for_injected_client(
+                base_url=base_url, api_key=api_key, api_key_header=api_key_header
+            )
+            self._http = http_client
+            # base_url must reflect the client actually in use, not the ignored arg.
+            self.base_url = _normalize_base_url(str(http_client.base_url))
+        else:
+            self.base_url = _normalize_base_url(base_url)
+            self._http = httpx.AsyncClient(
+                base_url=self.base_url,
+                headers=_build_headers(api_key, api_key_header),
+                timeout=timeout,
+            )
 
     @property
     def rate_limit(self) -> Optional[RateLimit]:
