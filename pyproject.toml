@@ -39,9 +39,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/arobertdev/lifi-py"
+Homepage = "https://github.com/robertruben98/lifi-py"
 Documentation = "https://docs.li.fi/api-reference/introduction"
-Repository = "https://github.com/arobertdev/lifi-py"
+Repository = "https://github.com/robertruben98/lifi-py"
+Issues = "https://github.com/robertruben98/lifi-py/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lifi_py"]
