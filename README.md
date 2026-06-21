@@ -1,5 +1,10 @@
 # lifi-py
 
+[![CI](https://github.com/robertruben98/lifi-py/actions/workflows/ci.yml/badge.svg)](https://github.com/robertruben98/lifi-py/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/lifi-py.svg)](https://pypi.org/project/lifi-py/)
+[![Python versions](https://img.shields.io/pypi/pyversions/lifi-py.svg)](https://pypi.org/project/lifi-py/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/robertruben98/lifi-py/blob/main/LICENSE)
+
 A typed Python client for the [LI.FI API](https://docs.li.fi/api-reference/introduction)
 — the bridge + DEX aggregator for **any-to-any cross-chain** swaps and bridges
 across 74 chains.
