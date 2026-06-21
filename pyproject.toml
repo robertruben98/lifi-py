@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lifi-py"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python client for the LI.FI API: bridge + DEX aggregator for any-to-any cross-chain swaps."
 readme = "README.md"
 license = { text = "MIT" }
